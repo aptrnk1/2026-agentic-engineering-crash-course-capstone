@@ -52,6 +52,7 @@ const entry = {
   ...(ti.command ? { cmd: String(ti.command).slice(0, 200) } : {}),
   ...(ti.pattern ? { pattern: ti.pattern } : {}),
   ...(ti.url ? { url: ti.url } : {}),
+  ...(ev.agent_type ? { agent: ev.agent_type } : {}),
 };
 
 if (event === "PostToolUse") {
