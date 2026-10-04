@@ -3,10 +3,14 @@
 // Silent no-op until the CLI has been built. Never fails the session.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 
-const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const dll = join(root, "src/AgentLog.Cli/bin/Debug/net10.0/agentlog.dll");
+const bin = join(root, "src/AgentLog.Cli/bin/Debug");
+const tfm = existsSync(bin)
+  ? readdirSync(bin).find((d) => existsSync(join(bin, d, "agentlog.dll")))
+  : undefined;
+if (!tfm) process.exit(0);
+const dll = join(bin, tfm, "agentlog.dll");
+
 if (!existsSync(dll)) process.exit(0);
 try {
   const md = execFileSync("dotnet", [dll, "summary", "--since", "today", "--format", "md"], {
