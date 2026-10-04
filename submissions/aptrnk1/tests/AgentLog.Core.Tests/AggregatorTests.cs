@@ -54,6 +54,20 @@ public class AggregatorTests
     }
 
     [Fact]
+    public void Executed_line_without_exit_is_not_failed()
+    {
+        // Review 001 #3: a Post line with no `exit` (older hook, trimmed log) is not evidence of failure.
+        string[] lines =
+        [
+            Line("PreToolUse", "t1", "Bash"),
+            Line("PostToolUse", "t1", "Bash", ",\"ms\":5"),
+        ];
+
+        Assert.Equal(new ToolStats("Bash", 1, 1, 0, 0, 5, 0), Assert.Single(Aggregator.Summarize(lines).Tools));
+        Assert.Empty(Aggregator.Failed(lines));
+    }
+
+    [Fact]
     public void Broken_lines_are_counted_as_skipped_and_blank_lines_ignored()
     {
         var summary = Aggregator.Summarize(

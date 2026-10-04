@@ -92,7 +92,7 @@ public static class Aggregator
         return entries.Where(e => e.Event == PreToolUse && IsBlocked(e, executedIds)).ToList();
     }
 
-    /// <summary>Executed lines with a non-zero exit, in log order.</summary>
+    /// <summary>Executed lines with a non-zero exit, in log order. Lines without `exit` are not failed.</summary>
     public static IReadOnlyList<LogEntry> Failed(IEnumerable<string> lines, LogFilter? filter = null)
     {
         var (entries, _) = Load(lines, filter);
@@ -135,7 +135,8 @@ public static class Aggregator
     private static bool IsBlocked(LogEntry pre, HashSet<string> executedIds) =>
         pre.Id is not null && !executedIds.Contains(pre.Id);
 
-    private static bool IsFailed(LogEntry executed) => executed.Exit != Success;
+    // No `exit` at all is unknown, not a failure.
+    private static bool IsFailed(LogEntry executed) => executed.Exit is { } exit && exit != Success;
 
     private sealed class Counter
     {
