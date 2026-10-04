@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\AgentLog.Core.Tests\fixtures\basic.jsonl" Link="fixtures\basic.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\AgentLog.Cli\AgentLog.Cli.csproj" />
   </ItemGroup>
 
