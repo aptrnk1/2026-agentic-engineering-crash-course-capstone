@@ -245,6 +245,41 @@ public class CliEndToEndTests
     }
 
     [Fact]
+    public void Missing_file_wins_over_invalid_since()
+    {
+        // Review 001 #8: no log is the more basic problem, so it decides the exit code.
+        var run = Agentlog("no/such/actions.jsonl", "--since", "soon");
+
+        Assert.Equal(2, run.ExitCode);
+        Assert.Contains("No log at no/such/actions.jsonl", run.Stderr);
+    }
+
+    [Fact]
+    public void Unreadable_file_is_exit_3_with_message_not_stack_trace()
+    {
+        if (OperatingSystem.IsWindows())
+            return; // Unix file modes only.
+
+        var log = TempLog(File.ReadAllLines(Fixture));
+        try
+        {
+            File.SetUnixFileMode(log, UnixFileMode.None);
+
+            var run = Agentlog("summary", log);
+
+            Assert.Equal(CliApp.Unreadable, run.ExitCode);
+            Assert.Equal("", run.Stdout);
+            Assert.Contains($"Cannot read {log}", run.Stderr);
+            Assert.DoesNotContain("   at ", run.Stderr);
+        }
+        finally
+        {
+            File.SetUnixFileMode(log, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            File.Delete(log);
+        }
+    }
+
+    [Fact]
     public void Default_file_is_agent_log_in_working_directory()
     {
         var dir = Directory.CreateTempSubdirectory("agentlog-e2e-");

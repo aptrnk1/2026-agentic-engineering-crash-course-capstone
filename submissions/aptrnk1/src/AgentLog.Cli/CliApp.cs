@@ -8,6 +8,7 @@ public static class CliApp
 {
     public const string DefaultLogPath = ".agent-log/actions.jsonl";
     public const int MissingFile = 2;
+    public const int Unreadable = 3;
 
     private delegate string Report(IEnumerable<string> lines, LogFilter filter, OutputFormat format);
 
@@ -58,6 +59,14 @@ public static class CliApp
 
         command.SetAction(parse =>
         {
+            // A missing log is the more basic problem, so it is reported before bad options.
+            var path = parse.GetValue(file) ?? DefaultLogPath;
+            if (!File.Exists(path))
+            {
+                stderr.WriteLine($"No log at {path}. Are the hooks in .claude/settings.json active? Run one Edit and check again.");
+                return MissingFile;
+            }
+
             DateTimeOffset? sinceValue = null;
             if (parse.GetValue(since) is { } raw)
             {
@@ -69,15 +78,19 @@ public static class CliApp
                 sinceValue = parsed;
             }
 
-            var path = parse.GetValue(file) ?? DefaultLogPath;
-            if (!File.Exists(path))
-            {
-                stderr.WriteLine($"No log at {path}. Are the hooks in .claude/settings.json active? Run one Edit and check again.");
-                return MissingFile;
-            }
-
             var filter = new LogFilter(parse.GetValue(session), sinceValue);
-            stdout.Write(report(File.ReadLines(path), filter, parse.GetValue(format)));
+            string output;
+            try
+            {
+                // ReadLines is lazy: read errors surface while the report enumerates the lines.
+                output = report(File.ReadLines(path), filter, parse.GetValue(format));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                stderr.WriteLine($"Cannot read {path}: {ex.Message}");
+                return Unreadable;
+            }
+            stdout.Write(output);
             return 0;
         });
         return command;
