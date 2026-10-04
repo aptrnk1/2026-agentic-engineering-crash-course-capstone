@@ -47,6 +47,33 @@ public class LogLineParserTests
         Assert.Equal(new ExitStatus(ExitKind.Interrupted), entry.Exit);
     }
 
+    [Fact]
+    public void Unknown_exit_string_is_read_as_error_not_skipped()
+    {
+        // Review 001 #7: one odd field must not drop the whole line.
+        const string line = """{"ts":"2026-10-04T10:40:00.000Z","event":"PostToolUseFailure","id":"toolu_04","session":"1613274a","mode":"default","tool":"Bash","cmd":"x","exit":"timeout","ms":5}""";
+
+        var entry = LogLineParser.Parse(line).Entry;
+
+        Assert.NotNull(entry);
+        Assert.Equal(new ExitStatus(ExitKind.Error), entry.Exit);
+        Assert.Equal(5, entry.Ms);
+    }
+
+    [Theory]
+    [InlineData("12.5", 13)]
+    [InlineData("12.4", 12)]
+    [InlineData("7", 7)]
+    public void Non_integer_ms_is_rounded_not_skipped(string ms, int expected)
+    {
+        var line = $$"""{"ts":"2026-10-04T10:40:00.000Z","event":"PostToolUse","id":"toolu_05","session":"1613274a","mode":"default","tool":"Bash","cmd":"x","exit":0,"ms":{{ms}}}""";
+
+        var entry = LogLineParser.Parse(line).Entry;
+
+        Assert.NotNull(entry);
+        Assert.Equal(expected, entry.Ms);
+    }
+
     [Theory]
     [InlineData("""{"ts":"2026-10-04T10:27:46.548Z","event":""")]
     [InlineData("not json at all")]

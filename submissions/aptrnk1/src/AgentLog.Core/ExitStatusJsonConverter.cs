@@ -3,7 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace AgentLog.Core;
 
-/// <summary>Maps `exit` (int OR "interrupted" / "error") to <see cref="ExitStatus"/> and back.</summary>
+/// <summary>
+/// Maps `exit` (int OR "interrupted" / "error") to <see cref="ExitStatus"/> and back.
+/// Any other string is read as an error, so one odd value does not drop the whole line.
+/// </summary>
 public sealed class ExitStatusJsonConverter : JsonConverter<ExitStatus>
 {
     private const string Interrupted = "interrupted";
@@ -20,7 +23,7 @@ public sealed class ExitStatusJsonConverter : JsonConverter<ExitStatus>
                 {
                     Interrupted => new ExitStatus(ExitKind.Interrupted),
                     Error => new ExitStatus(ExitKind.Error),
-                    var other => throw new JsonException($"Unknown exit value \"{other}\"."),
+                    _ => new ExitStatus(ExitKind.Error),
                 };
             default:
                 throw new JsonException($"Unexpected token {reader.TokenType} for exit.");

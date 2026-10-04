@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AgentLog.Core;
 
 /// <summary>One line of .agent-log/actions.jsonl (format: .claude/hooks/log-action.mjs).</summary>
@@ -13,7 +15,7 @@ public sealed record LogEntry(
     string? Pattern = null,
     string? Url = null,
     ExitStatus? Exit = null,
-    int? Ms = null);
+    [property: JsonConverter(typeof(RoundedMsJsonConverter))] int? Ms = null);
 
 public enum ExitKind { Code, Interrupted, Error }
 
