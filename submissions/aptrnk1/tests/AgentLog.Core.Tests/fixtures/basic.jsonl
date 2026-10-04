@@ -1,0 +1,19 @@
+{"ts":"2026-10-04T10:27:46.548Z","event":"PreToolUse","id":"toolu_01CD4GxMqFwcvCzB2CsitPFn","session":"1613274a","mode":"default","tool":"Read","path":"AGENTS.md"}
+{"ts":"2026-10-04T10:27:46.684Z","event":"PostToolUse","id":"toolu_01CD4GxMqFwcvCzB2CsitPFn","session":"1613274a","mode":"default","tool":"Read","path":"AGENTS.md","exit":0,"ms":13}
+{"ts":"2026-10-04T10:30:14.824Z","event":"PreToolUse","id":"toolu_01DrU4wa5gJssjTQ3EKYLnzA","session":"1613274a","mode":"default","tool":"Bash","cmd":"tail -5 .agent-log/actions.jsonl"}
+{"ts":"2026-10-04T10:30:15.754Z","event":"PostToolUse","id":"toolu_01DrU4wa5gJssjTQ3EKYLnzA","session":"1613274a","mode":"default","tool":"Bash","cmd":"tail -5 .agent-log/actions.jsonl","exit":0,"ms":820}
+{"ts":"2026-10-04T10:31:04.358Z","event":"PreToolUse","id":"toolu_014XidQeEdQoHQNGoTnD6wJU","session":"1613274a","mode":"default","tool":"Agent"}
+{"ts":"2026-10-04T10:31:04.499Z","event":"PostToolUse","id":"toolu_014XidQeEdQoHQNGoTnD6wJU","session":"1613274a","mode":"default","tool":"Agent","exit":0,"ms":11}
+{"ts":"2026-10-04T10:31:07.473Z","event":"PreToolUse","id":"toolu_01Kz4N3LWNdtb9RYPx38CDa8","session":"1613274a","mode":"default","tool":"Bash","cmd":"dotnet test 2>&1 | tail -40"}
+{"ts":"2026-10-04T10:31:19.200Z","event":"PostToolUse","id":"toolu_01Kz4N3LWNdtb9RYPx38CDa8","session":"1613274a","mode":"default","tool":"Bash","cmd":"dotnet test 2>&1 | tail -40","exit":0,"ms":11409}
+{"ts":"2026-10-04T10:37:35.101Z","event":"PreToolUse","id":"toolu_01ExjcZAwZiLf2kBspqLqoFM","session":"1613274a","mode":"default","tool":"Bash","cmd":"cat .claude/hooks/log-action.mjs; echo ---; find src tests -type f -not -path '*/bin/*' -not -path '*/obj/*' | xargs ls -la; echo ---; cat Directory.Build.props"}
+{"ts":"2026-10-04T10:37:39.086Z","event":"PostToolUseFailure","id":"toolu_01ExjcZAwZiLf2kBspqLqoFM","session":"1613274a","mode":"default","tool":"Bash","cmd":"cat .claude/hooks/log-action.mjs; echo ---; find src tests -type f -not -path '*/bin/*' -not -path '*/obj/*' | xargs ls -la; echo ---; cat Directory.Build.props","exit":1,"ms":173}
+{"ts":"2026-10-04T10:38:04.004Z","event":"PreToolUse","id":"toolu_01GB4ufxMchYinY5FnfhLRj5","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogEntry.cs"}
+{"ts":"2026-10-04T10:38:16.873Z","event":"PostToolUse","id":"toolu_01GB4ufxMchYinY5FnfhLRj5","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogEntry.cs","exit":0,"ms":33}
+{"ts":"2026-10-04T10:38:16.962Z","event":"PreToolUse","id":"toolu_016K4u4jEFxpjHDY15otJ9mM","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogLineParser.cs"}
+{"ts":"2026-10-04T10:38:17.086Z","event":"PostToolUse","id":"toolu_016K4u4jEFxpjHDY15otJ9mM","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogLineParser.cs","exit":0,"ms":20}
+{"ts":"2026-10-04T10:38:17.184Z","event":"PreToolUse","id":"toolu_019JwFfDpBkN7mJBDTH6Poiv","session":"1613274a","mode":"auto","tool":"Write","path":"tests/AgentLog.Core.Tests/LogLineParserTests.cs"}
+{"ts":"2026-10-04T10:38:17.307Z","event":"PostToolUse","id":"toolu_019JwFfDpBkN7mJBDTH6Poiv","session":"1613274a","mode":"auto","tool":"Write","path":"tests/AgentLog.Core.Tests/LogLineParserTests.cs","exit":0,"ms":16}
+{"ts":"2026-10-04T10:59:15.068Z","event":"PreToolUse","id":"toolu_01PHMYfsHETsEUNgXR7sSs6d","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogLineParser.cs"}
+{"ts":"2026-10-04T10:59:15.226Z","event":"PostToolUse","id":"toolu_01PHMYfsHETsEUNgXR7sSs6d","session":"1613274a","mode":"auto","tool":"Write","path":"src/AgentLog.Core/LogLineParser.cs","exit":0,"ms":50}
+{"ts":"2026-10-04T11:20:40.969Z","event":"PreToolUse","id":"toolu_01DCDKx9uGha51vsP73HkKqb","session":"1613274a","mode":"auto","tool":"Bash","cmd":"cat -n .agent-log/actions.jsonl | cut -c1-260"}
