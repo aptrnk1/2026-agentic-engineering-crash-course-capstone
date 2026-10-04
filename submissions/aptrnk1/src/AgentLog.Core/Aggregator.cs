@@ -75,10 +75,10 @@ public static class Aggregator
                 c.Ms += e.Ms ?? 0;
                 if (IsFailed(e))
                     c.Failed++;
+                // Executed lines only, same as Files(): a blocked proposal touched nothing.
+                if (e.Path is not null)
+                    c.Files.Add(e.Path);
             }
-
-            if (e.Path is not null)
-                c.Files.Add(e.Path);
         }
 
         var tools = order

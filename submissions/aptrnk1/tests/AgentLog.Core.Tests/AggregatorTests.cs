@@ -68,6 +68,24 @@ public class AggregatorTests
     }
 
     [Fact]
+    public void Files_of_blocked_proposals_are_not_counted()
+    {
+        // Review 001 #6: summary's file count must match `agentlog files` (executed actions only).
+        string[] lines =
+        [
+            Line("PreToolUse", "t1", "Write", ",\"path\":\".env\""),
+            Line("PreToolUse", "t2", "Write", ",\"path\":\"a.txt\""),
+            Line("PostToolUse", "t2", "Write", ",\"path\":\"a.txt\",\"exit\":0,\"ms\":1"),
+        ];
+
+        var write = Assert.Single(Aggregator.Summarize(lines).Tools);
+
+        Assert.Equal(1, write.Blocked);
+        Assert.Equal(1, write.UniqueFiles);
+        Assert.Equal(["a.txt"], Aggregator.Files(lines).Select(f => f.Path));
+    }
+
+    [Fact]
     public void Broken_lines_are_counted_as_skipped_and_blank_lines_ignored()
     {
         var summary = Aggregator.Summarize(
