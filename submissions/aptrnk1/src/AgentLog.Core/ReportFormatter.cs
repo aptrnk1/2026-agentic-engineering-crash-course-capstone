@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace AgentLog.Core;
 
@@ -10,10 +9,10 @@ public enum OutputFormat { Text, Json, Md }
 /// <summary>Renders reports as text tables, Markdown or JSON. Output always ends with "\n".</summary>
 public static class ReportFormatter
 {
+    // Nulls are written, not dropped: the JSON shape must not depend on the data.
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters = { new ExitStatusJsonConverter() },
     };
 

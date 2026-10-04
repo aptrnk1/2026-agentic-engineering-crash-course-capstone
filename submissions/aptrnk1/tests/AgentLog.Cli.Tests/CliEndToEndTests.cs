@@ -131,6 +131,39 @@ public class CliEndToEndTests
     }
 
     [Fact]
+    public void Json_keeps_null_keys_on_empty_log()
+    {
+        // Review 001 #4: consumers must see `null`, not a missing property.
+        var empty = Path.GetTempFileName();
+        try
+        {
+            var run = Agentlog("summary", empty, "--format", "json");
+
+            Assert.Equal(0, run.ExitCode);
+            using var doc = JsonDocument.Parse(run.Stdout);
+            Assert.Equal(JsonValueKind.Null, doc.RootElement.GetProperty("first").ValueKind);
+            Assert.Equal(JsonValueKind.Null, doc.RootElement.GetProperty("last").ValueKind);
+            Assert.Equal(0, doc.RootElement.GetProperty("executed").GetInt32());
+        }
+        finally
+        {
+            File.Delete(empty);
+        }
+    }
+
+    [Fact]
+    public void Json_entries_keep_null_keys()
+    {
+        var run = Agentlog("blocked", Fixture, "--format", "json");
+
+        using var doc = JsonDocument.Parse(run.Stdout);
+        var blocked = Assert.Single(doc.RootElement.EnumerateArray());
+        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("path").ValueKind);
+        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("exit").ValueKind);
+        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("ms").ValueKind);
+    }
+
+    [Fact]
     public void Files_lists_paths_with_action_counts()
     {
         var run = Agentlog("files", Fixture);
