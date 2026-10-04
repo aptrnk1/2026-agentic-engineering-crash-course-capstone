@@ -2,8 +2,10 @@
 // SessionStart hook: injects today's agentlog summary into the agent's context.
 // Silent no-op until the CLI has been built. Never fails the session.
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
+const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const bin = join(root, "src/AgentLog.Cli/bin/Debug");
 const tfm = existsSync(bin)
   ? readdirSync(bin).find((d) => existsSync(join(bin, d, "agentlog.dll")))
