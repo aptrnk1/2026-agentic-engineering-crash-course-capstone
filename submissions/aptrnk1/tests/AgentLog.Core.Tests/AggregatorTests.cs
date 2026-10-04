@@ -18,8 +18,8 @@ public class AggregatorTests
             {
                 // 4 Pre + 4 Post; LogLineParser.cs written twice -> 3 unique files
                 new ToolStats("Write", Proposed: 4, Executed: 4, Blocked: 0, Failed: 0, TotalMs: 33 + 20 + 16 + 50, UniqueFiles: 3),
-                // last Pre has no Post -> blocked; PostToolUseFailure exit 1 -> failed
-                new ToolStats("Bash", Proposed: 4, Executed: 3, Blocked: 1, Failed: 1, TotalMs: 820 + 11409 + 173, UniqueFiles: 0),
+                // last Pre has no Post and nothing ran after it -> pending; PostToolUseFailure exit 1 -> failed
+                new ToolStats("Bash", Proposed: 4, Executed: 3, Blocked: 0, Failed: 1, TotalMs: 820 + 11409 + 173, UniqueFiles: 0, Pending: 1),
                 new ToolStats("Read", Proposed: 1, Executed: 1, Blocked: 0, Failed: 0, TotalMs: 13, UniqueFiles: 1),
                 new ToolStats("Agent", Proposed: 1, Executed: 1, Blocked: 0, Failed: 0, TotalMs: 11, UniqueFiles: 0),
             },

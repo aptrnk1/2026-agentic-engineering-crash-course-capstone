@@ -42,6 +42,13 @@ public class CliEndToEndTests
 
     private static Run Agentlog(params string[] args) => AgentlogIn(null, args);
 
+    private static string TempLog(params string[] lines)
+    {
+        var path = Path.GetTempFileName();
+        File.WriteAllLines(path, lines);
+        return path;
+    }
+
     [Fact]
     public void Summary_is_the_default_command()
     {
@@ -50,13 +57,13 @@ public class CliEndToEndTests
         Assert.Equal(0, run.ExitCode);
         Assert.Equal("", run.Stderr);
         Assert.Equal(
-            "Agent actions: 9 executed, 1 blocked, 1 failed; 1 session(s), 2026-10-04T10:27:46.548Z .. 2026-10-04T11:20:40.969Z",
+            "Agent actions: 9 executed, 0 blocked, 1 pending, 1 failed; 1 session(s), 2026-10-04T10:27:46.548Z .. 2026-10-04T11:20:40.969Z",
             run.Lines[0]);
         Assert.Equal(
             [
                 "tool   proposed  executed  blocked  failed  time (s)  files",
                 "Write         4         4        0       0       0.1      3",
-                "Bash          4         3        1       1      12.4      0",
+                "Bash          4         3        0       1      12.4      0",
                 "Read          1         1        0       0       0.0      1",
                 "Agent         1         1        0       0       0.0      0",
             ],
@@ -75,9 +82,9 @@ public class CliEndToEndTests
         var run = Agentlog("summary", Fixture, "--format", "md");
 
         Assert.Equal(0, run.ExitCode);
-        Assert.StartsWith("**Agent actions: 9 executed, 1 blocked, 1 failed;", run.Stdout);
+        Assert.StartsWith("**Agent actions: 9 executed, 0 blocked, 1 pending, 1 failed;", run.Stdout);
         Assert.Contains("| tool | proposed | executed | blocked | failed | time (s) | files |\n|---|---:|---:|---:|---:|---:|---:|\n", run.Stdout);
-        Assert.Contains("| Bash | 4 | 3 | 1 | 1 | 12.4 | 0 |\n", run.Stdout);
+        Assert.Contains("| Bash | 4 | 3 | 0 | 1 | 12.4 | 0 |\n", run.Stdout);
     }
 
     [Fact]
@@ -89,7 +96,8 @@ public class CliEndToEndTests
         using var doc = JsonDocument.Parse(run.Stdout);
         var root = doc.RootElement;
         Assert.Equal(9, root.GetProperty("executed").GetInt32());
-        Assert.Equal(1, root.GetProperty("blocked").GetInt32());
+        Assert.Equal(0, root.GetProperty("blocked").GetInt32());
+        Assert.Equal(1, root.GetProperty("pending").GetInt32());
         var write = root.GetProperty("tools")[0];
         Assert.Equal("Write", write.GetProperty("tool").GetString());
         Assert.Equal(119, write.GetProperty("totalMs").GetInt64());
@@ -98,14 +106,29 @@ public class CliEndToEndTests
     [Fact]
     public void Blocked_lists_the_unmatched_pre_line()
     {
-        var run = Agentlog("blocked", Fixture);
+        var log = TempLog(
+            """{"ts":"2026-10-04T10:00:00.000Z","event":"PreToolUse","id":"t1","session":"s1","mode":"auto","tool":"Write","path":".env"}""",
+            """{"ts":"2026-10-04T10:00:01.000Z","event":"PreToolUse","id":"t2","session":"s1","mode":"auto","tool":"Read","path":"a.txt"}""",
+            """{"ts":"2026-10-04T10:00:02.000Z","event":"PostToolUse","id":"t2","session":"s1","mode":"auto","tool":"Read","path":"a.txt","exit":0,"ms":1}""");
+        try
+        {
+            var run = Agentlog("blocked", log);
 
-        Assert.Equal(0, run.ExitCode);
-        Assert.Equal(["ts", "tool", "target"], run.Row("ts"));
-        Assert.Equal(2, run.Lines.Length);
-        Assert.Equal(
-            "2026-10-04T11:20:40.969Z  Bash  cat -n .agent-log/actions.jsonl | cut -c1-260",
-            run.Lines[1]);
+            Assert.Equal(0, run.ExitCode);
+            Assert.Equal(["ts", "tool", "target"], run.Row("ts"));
+            Assert.Equal(2, run.Lines.Length);
+            Assert.Equal("2026-10-04T10:00:00.000Z  Write  .env", run.Lines[1]);
+        }
+        finally
+        {
+            File.Delete(log);
+        }
+    }
+
+    [Fact]
+    public void Blocked_does_not_list_the_still_running_last_action()
+    {
+        Assert.Equal("No blocked actions.\n", Agentlog("blocked", Fixture).Stdout);
     }
 
     [Fact]
@@ -154,13 +177,13 @@ public class CliEndToEndTests
     [Fact]
     public void Json_entries_keep_null_keys()
     {
-        var run = Agentlog("blocked", Fixture, "--format", "json");
+        var run = Agentlog("failed", Fixture, "--format", "json");
 
         using var doc = JsonDocument.Parse(run.Stdout);
-        var blocked = Assert.Single(doc.RootElement.EnumerateArray());
-        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("path").ValueKind);
-        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("exit").ValueKind);
-        Assert.Equal(JsonValueKind.Null, blocked.GetProperty("ms").ValueKind);
+        var failed = Assert.Single(doc.RootElement.EnumerateArray());
+        Assert.Equal(JsonValueKind.Null, failed.GetProperty("path").ValueKind);
+        Assert.Equal(JsonValueKind.Null, failed.GetProperty("pattern").ValueKind);
+        Assert.Equal(JsonValueKind.Null, failed.GetProperty("url").ValueKind);
     }
 
     [Fact]
@@ -181,8 +204,8 @@ public class CliEndToEndTests
         var run = Agentlog("summary", Fixture, "--since", "2026-10-04T11:00:00Z");
 
         Assert.Equal(0, run.ExitCode);
-        Assert.StartsWith("Agent actions: 0 executed, 1 blocked, 0 failed; 1 session(s), 2026-10-04T11:20:40.969Z", run.Lines[0]);
-        Assert.Equal(["Bash", "1", "0", "1", "0", "0.0", "0"], run.Row("Bash"));
+        Assert.StartsWith("Agent actions: 0 executed, 0 blocked, 1 pending, 0 failed; 1 session(s), 2026-10-04T11:20:40.969Z", run.Lines[0]);
+        Assert.Equal(["Bash", "1", "0", "0", "0", "0.0", "0"], run.Row("Bash"));
     }
 
     [Fact]

@@ -21,7 +21,7 @@ public static class CliApp
             new Command("summary", "Per-tool counts: proposed, executed, blocked, failed, time, files."),
             summary, stdout, stderr, time));
         root.Subcommands.Add(Configure(
-            new Command("blocked", "Proposed actions that never ran (PreToolUse without a Post line of the same id)."),
+            new Command("blocked", "Proposed actions that never ran (PreToolUse without a Post line of the same id, followed by other executed actions in the session)."),
             (lines, filter, format) => ReportFormatter.Blocked(Aggregator.Blocked(lines, filter), format),
             stdout, stderr, time));
         root.Subcommands.Add(Configure(

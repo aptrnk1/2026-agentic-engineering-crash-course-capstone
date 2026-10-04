@@ -22,7 +22,7 @@ public static class ReportFormatter
             return ToJson(s);
 
         var header =
-            $"Agent actions: {s.Executed} executed, {s.Blocked} blocked, {s.Failed} failed; " +
+            $"Agent actions: {s.Executed} executed, {s.Blocked} blocked, {s.Pending} pending, {s.Failed} failed; " +
             $"{s.Sessions} session(s), {Ts(s.First)} .. {Ts(s.Last)}";
         if (s.SkippedLines > 0)
             header += $"; {s.SkippedLines} unparsable line(s) skipped";
