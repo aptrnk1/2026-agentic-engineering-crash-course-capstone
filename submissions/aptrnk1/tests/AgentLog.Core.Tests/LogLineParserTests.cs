@@ -60,6 +60,18 @@ public class LogLineParserTests
         Assert.Equal(5, entry.Ms);
     }
 
+    [Fact]
+    public void Exit_code_above_int_range_is_read_as_error_not_skipped()
+    {
+        // Review 002 #1: Windows crash codes like 0xC0000005 do not fit in an int.
+        const string line = """{"ts":"2026-10-04T10:40:00.000Z","event":"PostToolUseFailure","id":"toolu_06","session":"1613274a","mode":"default","tool":"Bash","cmd":"x","exit":3221225477,"ms":5}""";
+
+        var result = LogLineParser.Parse(line);
+
+        Assert.False(result.Skipped);
+        Assert.Equal(new ExitStatus(ExitKind.Error), result.Entry!.Exit);
+    }
+
     [Theory]
     [InlineData("12.5", 13)]
     [InlineData("12.4", 12)]

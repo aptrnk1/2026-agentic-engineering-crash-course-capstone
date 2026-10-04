@@ -5,7 +5,7 @@ namespace AgentLog.Core;
 
 /// <summary>
 /// Maps `exit` (int OR "interrupted" / "error") to <see cref="ExitStatus"/> and back.
-/// Any other string is read as an error, so one odd value does not drop the whole line.
+/// Any other string or an out-of-range number is read as an error, so one odd value does not drop the whole line.
 /// </summary>
 public sealed class ExitStatusJsonConverter : JsonConverter<ExitStatus>
 {
@@ -18,6 +18,9 @@ public sealed class ExitStatusJsonConverter : JsonConverter<ExitStatus>
         {
             case JsonTokenType.Number when reader.TryGetInt32(out var code):
                 return new ExitStatus(ExitKind.Code, code);
+            case JsonTokenType.Number:
+                // Out of int range (e.g. Windows 0xC0000005): still a failure, keep the line.
+                return new ExitStatus(ExitKind.Error);
             case JsonTokenType.String:
                 return reader.GetString() switch
                 {

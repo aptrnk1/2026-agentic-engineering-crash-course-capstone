@@ -49,6 +49,19 @@ public class CliEndToEndTests
         return path;
     }
 
+    private static bool CanOpen(string path)
+    {
+        try
+        {
+            File.OpenRead(path).Dispose();
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     [Fact]
     public void Summary_is_the_default_command()
     {
@@ -211,16 +224,30 @@ public class CliEndToEndTests
     [Fact]
     public void Session_filter_with_unknown_session_gives_empty_report()
     {
-        var run = Agentlog("blocked", Fixture, "--session", "deadbeef");
+        // Review 002 #3: the fixture has actions, so this fails if --session is ignored.
+        var run = Agentlog("summary", Fixture, "--session", "deadbeef");
 
         Assert.Equal(0, run.ExitCode);
-        Assert.Equal("No blocked actions.\n", run.Stdout);
+        Assert.StartsWith("Agent actions: 0 executed, 0 blocked, 0 pending, 0 failed; 0 session(s)", run.Lines[0]);
     }
 
     [Fact]
-    public void Session_filter_with_known_session_keeps_everything()
+    public void Session_filter_drops_other_sessions()
     {
-        Assert.Equal(Agentlog(Fixture).Stdout, Agentlog(Fixture, "--session", "1613274a").Stdout);
+        var log = TempLog(
+        [
+            .. File.ReadAllLines(Fixture),
+            """{"ts":"2026-10-04T12:00:00.000Z","event":"PreToolUse","id":"other1","session":"otherses","mode":"auto","tool":"Write","path":"x.txt"}""",
+        ]);
+        try
+        {
+            Assert.NotEqual(Agentlog(Fixture).Stdout, Agentlog(log).Stdout);
+            Assert.Equal(Agentlog(Fixture).Stdout, Agentlog(log, "--session", "1613274a").Stdout);
+        }
+        finally
+        {
+            File.Delete(log);
+        }
     }
 
     [Fact]
@@ -264,6 +291,8 @@ public class CliEndToEndTests
         try
         {
             File.SetUnixFileMode(log, UnixFileMode.None);
+            if (CanOpen(log))
+                return; // Root ignores file modes (review 002 #4), so the file cannot be made unreadable.
 
             var run = Agentlog("summary", log);
 
